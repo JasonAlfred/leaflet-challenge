@@ -25,6 +25,7 @@ function getColor(depth) {
 
 
 
+
 let url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
 d3
@@ -51,6 +52,26 @@ d3.json(url).then(function (response) {
              </span><br>
              <h3>Magnitude: <h3>${features.properties.mag}`)
     );
+  }
+
+  let plateMarkers = [];
+  for (i=0; i< plateGeoJson.length; i++) {
+    coordinates = [];
+
+    // #need to flip around the stupid latlng.  How frustrating!!
+
+    for (j = 0; j< plateGeoJson[i]['geometry']['coordinates'].length; j++) {
+      coordinates.push([plateGeoJson[i]['geometry']['coordinates'][j][1], plateGeoJson[i]['geometry']['coordinates'][j][0]])
+ 
+    }
+
+    plateMarkers.push( 
+      L.polygon(coordinates, {
+        weight: 1,
+        fillOpacity: 0,
+        color: 'white',
+        dashArray: '1'
+      }))
   }
 
   let streetmap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
@@ -90,9 +111,8 @@ d3.json(url).then(function (response) {
     accessToken: API_KEY
   });
 
-
-
   let earthquakes = L.layerGroup(quakeMarkers);
+  let plates = L.layerGroup(plateMarkers);
 
   // Create a baseMaps object
   let baseMaps = {
@@ -104,16 +124,18 @@ d3.json(url).then(function (response) {
 
   };
 
+
   // Create an overlay object
   let overlayMaps = {
-    "Earthquakes": earthquakes
+    "Earthquakes": earthquakes,
+    "Tectonic Plates": plates
   };
 
   // Define a map object
-  let myMap = L.map("map", {
+  myMap = L.map("map", {
     center: [37.09, -95.71],
     zoom: 3,
-    layers: [darkmap, earthquakes]
+    layers: [darkmap, earthquakes, plates]
   });
 
   // Pass our map layers into our layer control
@@ -123,3 +145,4 @@ d3.json(url).then(function (response) {
   }).addTo(myMap);
 
 })
+
